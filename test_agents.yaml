@@ -1,0 +1,318 @@
+# ===================================================================
+#         Agentic AI System Configuration Template
+# ===================================================================
+# This YAML file defines the structure and resources for a multi-agent
+# AI system focused on improving software test coverage. It specifies
+# global context, agent definitions, and the data flow between them.
+# ===================================================================
+
+# --- Global Configuration ---
+# Defines settings that apply to the entire agentic system.
+global_config:
+  # The primary context file that provides shared background, instructions,
+  # or data for all agents in the system.
+  context_reference_file: "config/test_global_context.md"
+
+# --- Directed Acyclic Graph (DAG) Flow ---
+# Defines the sequence of execution for the agents, including the
+# explicit input and output data flow between them.
+dag_flow:
+  - agent: coverage_analysis_agent
+    input: "data/inputs/codebase_files.md"
+    output: "data/outputs/coverage_gap_report.md"
+  
+  - agent: business_context_agent
+    input: "data/outputs/coverage_gap_report.md"
+    output: "data/outputs/contextual_gap_report.md"
+  
+  - agent: test_suggestion_agent
+    input: "data/outputs/contextual_gap_report.md"
+    output: "data/outputs/suggested_tests_report.md"
+  
+  - agent: reporting_integration_agent
+    input: "data/outputs/suggested_tests_report.md"
+    output: "data/final_report/test_report.md"
+
+# --- Agent Definitions ---
+# A list of all agents (nodes) that are part of the system.
+# Each agent has its own configuration for I/O and resources.
+agents:
+  - name: coverage_analysis_agent
+    description: "A detail-oriented code analyst that identifies gaps in software test coverage."
+    objective: "Analyze a given codebase and its test coverage report to pinpoint all untested functions, methods, and critical code paths."
+    core_responsibilities:
+      - "Parse source code files to understand their structure and modules."
+      - "Correlate code with a test coverage report to identify specific untested lines."
+      - "Group untested lines by function or method for clear reporting."
+      - "Generate a structured report detailing each identified coverage gap."
+    key_traits: ["analytical", "meticulous", "systematic", "thorough"]
+    input_sample: |
+      # Codebase and Coverage Summary
+
+      ## File: `/src/billing/core.js`
+      ```javascript
+      function calculateTotal(items) {
+        let total = 0;
+        for (const item of items) {
+          total += item.price;
+        }
+        return total;
+      }
+
+      function applyDiscount(total, discountCode) {
+        if (discountCode === 'SAVE10') {
+          return total * 0.9;
+        }
+        return total;
+      }
+      ```
+
+      ## Coverage Report
+      - **File:** `/src/billing/core.js`
+      - **Function:** `calculateTotal`
+      - **Coverage:** 100%
+      - **Function:** `applyDiscount`
+      - **Coverage:** 0%
+    output_sample: |
+      # Test Coverage Gap Report
+
+      ## Gap 1: Untested Function
+
+      - **File:** `/src/billing/core.js`
+      - **Function Name:** `applyDiscount`
+      - **Lines Not Covered:** 11-16
+      - **Code Block:**
+        ```javascript
+        function applyDiscount(total, discountCode) {
+          if (discountCode === 'SAVE10') {
+            return total * 0.9;
+          }
+          return total;
+        }
+        ```
+      - **Initial Assessment:** Core billing logic is not covered by any existing tests.
+
+  - name: business_context_agent
+    description: "A business-savvy analyst who determines the commercial risk of technical gaps."
+    objective: "Evaluate the business impact of untested code by analyzing its function and the data it processes."
+    core_responsibilities:
+      - "Infer the business purpose of the code from its name, location, and logic."
+      - "Assess the sensitivity of data handled by the function (e.g., financial, user data)."
+      - "Determine the potential business risk if the function fails (e.g., revenue loss, user dissatisfaction)."
+      - "Add contextual risk assessment to the gap report."
+    key_traits: ["context-aware", "risk-oriented", "pragmatic", "analytical"]
+    input_sample: |
+      # Test Coverage Gap Report
+
+      ## Gap 1: Untested Function
+
+      - **File:** `/src/billing/core.js`
+      - **Function Name:** `applyDiscount`
+      - **Lines Not Covered:** 11-16
+      - **Code Block:**
+        ```javascript
+        function applyDiscount(total, discountCode) {
+          if (discountCode === 'SAVE10') {
+            return total * 0.9;
+          }
+          return total;
+        }
+        ```
+      - **Initial Assessment:** Core billing logic is not covered by any existing tests.
+    output_sample: |
+      # Contextual Gap Report
+
+      ## Gap 1: Untested `applyDiscount` Function
+
+      - **File:** `/src/billing/core.js`
+      - **Function Name:** `applyDiscount`
+
+      ### Coverage Analysis
+      - **Lines Not Covered:** 11-16
+      - **Code Block:**
+        ```javascript
+        function applyDiscount(total, discountCode) {
+          if (discountCode === 'SAVE10') {
+            return total * 0.9;
+          }
+          return total;
+        }
+        ```
+
+      ### Business Context
+      - **Inferred Business Process:** E-commerce checkout and billing.
+      - **Data Sensitivity:** High. Directly manipulates financial calculations.
+      - **Business Risk:** Critical. A bug in this function could lead to incorrect pricing for all customers, causing either direct revenue loss (if discounts are too high) or customer complaints and churn (if discounts fail to apply). This has a direct and immediate financial impact.
+
+  - name: test_suggestion_agent
+    description: "A skilled QA engineer who devises concrete test plans for uncovered code."
+    objective: "Generate specific, actionable, and easy-to-implement test cases to fix the identified coverage gaps."
+    core_responsibilities:
+      - "Analyze the function's logic to determine necessary test conditions (e.g., edge cases, happy path)."
+      - "Write clear descriptions for each test case."
+      - "Provide complete, runnable code examples for each suggested test."
+      - "Suggest both unit tests and integration tests where appropriate."
+    key_traits: ["solution-oriented", "practical", "code-fluent", "methodical"]
+    input_sample: |
+      # Contextual Gap Report
+
+      ## Gap 1: Untested `applyDiscount` Function
+
+      - **File:** `/src/billing/core.js`
+      - **Function Name:** `applyDiscount`
+
+      ### Coverage Analysis
+      - **Lines Not Covered:** 11-16
+      - **Code Block:**
+        ```javascript
+        function applyDiscount(total, discountCode) {
+          if (discountCode === 'SAVE10') {
+            return total * 0.9;
+          }
+          return total;
+        }
+        ```
+
+      ### Business Context
+      - **Inferred Business Process:** E-commerce checkout and billing.
+      - **Data Sensitivity:** High. Directly manipulates financial calculations.
+      - **Business Risk:** Critical. A bug in this function could lead to incorrect pricing for all customers.
+    output_sample: |
+      # Suggested Tests Report
+
+      ## Gap 1: `applyDiscount` Function
+
+      - **File:** `/src/billing/core.js`
+      - **Function Name:** `applyDiscount`
+
+      ### Business Risk
+      - **Risk Level:** Critical
+      - **Potential Impact:** Incorrect pricing, revenue loss, customer dissatisfaction.
+
+      ### Recommended Tests
+      - **Strategy:** Create unit tests that cover all logical branches within the function: a valid discount code, an invalid or null discount code, and a zero total.
+
+      - **Test Case 1: Valid Discount Code**
+        - **Objective:** Verify that the 'SAVE10' code correctly applies a 10% discount.
+        - **Implementation:**
+          ```javascript
+          test('should apply a 10% discount for a valid code', () => {
+            expect(applyDiscount(100, 'SAVE10')).toBe(90);
+          });
+          ```
+
+      - **Test Case 2: Invalid Discount Code**
+        - **Objective:** Ensure no discount is applied if the code is incorrect.
+        - **Implementation:**
+          ```javascript
+          test('should not apply a discount for an invalid code', () => {
+            expect(applyDiscount(100, 'INVALID')).toBe(100);
+          });
+          ```
+      
+      - **Test Case 3: Null or Missing Discount Code**
+        - **Objective:** Ensure no discount is applied if the code is null or undefined.
+        - **Implementation:**
+          ```javascript
+          test('should not apply a discount for a null code', () => {
+            expect(applyDiscount(100, null)).toBe(100);
+          });
+          ```
+
+  - name: reporting_integration_agent
+    description: "An efficient reporting specialist who packages analysis for human and machine consumption."
+    objective: "Compile a complete test coverage analysis report and generate a structured JSON object for ticketing systems."
+    core_responsibilities:
+      - "Consolidate all information from previous agents into a single, coherent markdown report."
+      - "Generate a JSON output that maps directly to fields in a ticketing system like Jira or GitHub Issues."
+      - "Ensure the final report is clear, concise, and actionable for both technical and business stakeholders."
+    key_traits: ["organized", "automated", "communicative", "structured"]
+    input_sample: |
+      # Suggested Tests Report
+
+      ## Gap 1: `applyDiscount` Function
+
+      - **File:** `/src/billing/core.js`
+      - **Function Name:** `applyDiscount`
+
+      ### Business Risk
+      - **Risk Level:** Critical
+      - **Potential Impact:** Incorrect pricing, revenue loss, customer dissatisfaction.
+
+      ### Recommended Tests
+      - **Strategy:** Create unit tests that cover all logical branches.
+      - **Test Case 1: Valid Discount Code**
+        - **Implementation:**
+          ```javascript
+          test('should apply a 10% discount for a valid code', () => {
+            expect(applyDiscount(100, 'SAVE10')).toBe(90);
+          });
+          ```
+      - **Test Case 2: Invalid Discount Code**
+        - **Implementation:**
+          ```javascript
+          test('should not apply a discount for an invalid code', () => {
+            expect(applyDiscount(100, 'INVALID')).toBe(100);
+          });
+          ```
+    output_sample: |
+      # Final Test Coverage Report (test_report.md)
+
+      ## Executive Summary
+      A critical test coverage gap was identified in the billing module. The `applyDiscount` function, which directly impacts revenue calculations, has zero test coverage. Failure to address this poses a critical risk of financial errors and customer dissatisfaction. This report details the gap and provides ready-to-implement test cases.
+
+      ---
+      ## Gap 1: `applyDiscount` in `/src/billing/core.js`
+
+      ### Business Context Analysis
+      - **Inferred Business Process:** E-commerce checkout and billing.
+      - **Data Sensitivity:** High. Directly manipulates financial calculations.
+      - **Business Risk:** Critical. A bug could lead to incorrect pricing, causing revenue loss or customer complaints.
+
+      ### Suggested Test Implementations
+      - **Strategy:** The function's logic requires testing three conditions: a valid discount, an invalid discount, and a null discount.
+
+      - **Test Case 1: Valid Discount**
+        ```javascript
+        test('should apply a 10% discount for a valid code', () => {
+          expect(applyDiscount(100, 'SAVE10')).toBe(90);
+        });
+        ```
+
+      - **Test Case 2: Invalid Discount**
+        ```javascript
+        test('should not apply a discount for an invalid code', () => {
+          expect(applyDiscount(100, 'INVALID')).toBe(100);
+        });
+        ```
+      
+      - **Test Case 3: Null Discount**
+        ```javascript
+        test('should not apply a discount for a null code', () => {
+          expect(applyDiscount(100, null)).toBe(100);
+        });
+        ```
+      ---
+      
+      # Integration Output (tickets.json)
+      
+      {
+        "tickets": [
+          {
+            "title": "Critical Test Coverage Gap in `applyDiscount` Function",
+            "assignees": ["@qa-team", "@billing-squad"],
+            "labels": ["test-coverage", "critical-risk", "billing-module", "bug"],
+            "priority": "Highest",
+            "severity": "Critical",
+            "body": "### Summary\nA critical test coverage gap has been identified in the `applyDiscount` function located in `/src/billing/core.js`.\n\n### Business Risk\nThis function directly impacts financial calculations for customer-facing discounts. A bug could lead to significant revenue loss or customer dissatisfaction. The risk is rated as **Critical**.\n\n### Action Required\nThe following unit tests must be implemented to ensure the function behaves as expected. Please add them to the appropriate test suite.\n\n#### Test Case 1: Valid Discount\n```javascript\ntest('should apply a 10% discount for a valid code', () => {\n  expect(applyDiscount(100, 'SAVE10')).toBe(90);\n});\n```\n\n#### Test Case 2: Invalid Discount\n```javascript\ntest('should not apply a discount for an invalid code', () => {\n  expect(applyDiscount(100, 'INVALID')).toBe(100);\n});\n```\n\n#### Test Case 3: Null Discount\n```javascript\ntest('should not apply a discount for a null code', () => {\n  expect(applyDiscount(100, null)).toBe(100);\n});\n```",
+            "metadata": {
+              "gap_id": "GAP-2025-001",
+              "discovery_date": "2025-07-28",
+              "module": "billing",
+              "file": "/src/billing/core.js",
+              "function": "applyDiscount",
+              "implementation_effort": "Low"
+            }
+          }
+        ]
+      }

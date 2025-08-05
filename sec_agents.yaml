@@ -1,0 +1,579 @@
+# ===================================================================
+#         Agentic AI System Configuration Template
+# ===================================================================
+# This YAML file defines the structure and resources for a multi-agent
+# AI system. It specifies global context, agent definitions, and
+# paths to their respective inputs, outputs, tools, and credentials.
+# ===================================================================
+
+# --- Global Configuration ---
+# Defines settings that apply to the entire agentic system.
+global_config:
+  # The primary context file that provides shared background, instructions,
+  # or data for all agents in the system.
+  context_reference_file: "config/sec_global_context.md"
+
+# --- Directed Acyclic Graph (DAG) Flow ---
+# Defines the sequence of execution for the agents, including the
+# explicit input and output data flow between them.
+dag_flow:
+  - agent: cve_detection_agent
+    input: "data/inputs/codebase_files.md"
+    output: "data/outputs/detection_report.md"
+  
+  - agent: business_context_agent
+    input: "data/outputs/detection_report.md"
+    output: "data/outputs/context_report.md"
+  
+  - agent: cve_grading_agent
+    input: "data/outputs/context_report.md"
+    output: "data/outputs/grading_report.md"
+  
+  - agent: cve_attack_generator_agent
+    input: "data/outputs/grading_report.md"
+    output: "data/outputs/attack_report.md"
+  
+  - agent: cve_fix_generator_agent
+    input: "data/outputs/attack_report.md"
+    output: "data/outputs/resolution_report.md"
+  
+  - agent: reporting_integration_agent
+    input: "data/outputs/resolution_report.md"
+    output: "data/final_report/final_report.md"
+
+# --- Agent Definitions ---
+# A list of all agents (nodes) that are part of the system.
+# Each agent has its own configuration for I/O and resources.
+agents:
+  - name: cve_detection_agent
+    description: "Highly vigilant code analyst specialized in identifying OWASP Top 10 vulnerabilities"
+    objective: "Meticulously scan the provided codebase to identify potential vulnerabilities corresponding to the OWASP Top 10"
+    core_responsibilities:
+      - "Systematically review every line of code for security vulnerabilities"
+      - "Identify specific code segments matching OWASP Top 10 patterns"
+      - "Analyze data handling, authentication, session management, and external system interactions"
+      - "Create detailed vulnerability reports with file paths, line numbers, and reasoning"
+    key_traits: ["vigilant", "meticulous", "security-focused", "comprehensive"]
+    input_sample: |
+      Project Tree:
+      ```
+      ├── package.json
+      ├── src/
+      │   ├── index.js
+      │   ├── utils/
+      │   │   └── helpers.js
+      │   └── api/
+      │       └── routes.js
+      ├── bin/
+      │   └── app.js
+      ├── config/
+      │   └── settings.js
+      └── README.md
+      ```
+
+
+      # File: bin/app.js
+      ```javascript
+      #!/usr/bin/env node
+
+      function main() {
+          console.log("Hello, World!");
+          console.log("Application started successfully");
+          
+          const env = process.env.NODE_ENV || 'development';
+          console.log(`Running in ${env} mode`);
+      }
+
+      if (require.main === module) {
+          main();
+      }
+
+      module.exports = { main };
+      ```
+      # End of file: bin/app.js
+
+    output_sample: |
+      # Detection Report
+
+      ## Vulnerability 1
+
+      - **File:** `/src/user/api.js`
+      - **Line Number:** 87
+      - **OWASP Category:** A03:2021-Injection
+      - **Suspect Code:**
+        ```javascript
+        const query = `SELECT * FROM users WHERE id = '${req.params.id}'`;
+        db.query(query);
+        ```
+      - **Reasoning:** User-supplied input from `req.params.id` is directly concatenated into an SQL query string, creating a classic SQL Injection vulnerability.
+
+  - name: business_context_agent
+    description: "Savvy analyst who bridges the gap between code and commerce"
+    objective: "Enrich vulnerability analysis by providing essential business context and determining criticality"
+    core_responsibilities:
+      - "Infer business function from file names, code comments, and logic"
+      - "Assess data sensitivity (PII, financial, authentication tokens)"
+      - "Analyze potential business impact of vulnerability exploitation"
+      - "Provide risk-adjusted context for CVSS scoring"
+    key_traits: ["context-aware", "risk-oriented", "analytical", "efficient"]
+    input_sample: |
+      # Detection Report
+
+      ## Vulnerability 1
+
+      - **File:** `/src/user/api.js`
+      - **Line Number:** 87
+      - **OWASP Category:** A03:2021-Injection
+      - **Suspect Code:**
+        ```javascript
+        const query = `SELECT * FROM users WHERE id = '${req.params.id}'`;
+        db.query(query);
+        ```
+      - **Reasoning:** User-supplied input from `req.params.id` is directly concatenated into an SQL query string, creating a classic SQL Injection vulnerability.
+    output_sample: |
+      # Detection Report
+
+      ## Vulnerability 1
+
+      - **File:** `/src/user/api.js`
+      - **Line Number:** 87
+      - **OWASP Category:** A03:2021-Injection
+      - **Suspect Code:**
+        ```javascript
+        const query = `SELECT * FROM users WHERE id = '${req.params.id}'`;
+        db.query(query);
+        ```
+      - **Reasoning:** User-supplied input from `req.params.id` is directly concatenated into an SQL query string, creating a classic SQL Injection vulnerability.
+
+      ## Business Context
+
+      - **Inferred Function:** User data retrieval API endpoint
+      - **Data Sensitivity:** High. The users table likely contains Personally Identifiable Information (PII)
+      - **Risk Scenario:** The database could be encrypted in a ransomware attack, deleted, or attackers could escalate privileges
+      - **Business Impact:** Data breach, customer revenue loss, reputation damage, regulatory fines
+      - **Potential Impact:** A successful exploit could lead to a major data breach of all user records
+
+  - name: cve_grading_agent
+    description: "Precise and objective risk assessor using CVSS 3.1 methodology"
+    objective: "Evaluate identified vulnerabilities and assign standardized severity scores"
+    core_responsibilities:
+      - "Calculate CVSS 3.1 scores using technical and business context"
+      - "Construct complete CVSS vector strings"
+      - "Filter vulnerabilities by severity threshold (6.0+)"
+      - "Prioritize threats based on standardized risk assessment"
+    key_traits: ["precise", "objective", "methodical", "standards-compliant"]
+    input_sample: |
+      # Detection Report
+      ## Vulnerability 1
+      - **File:** `/src/user/api.js`
+      - **Line Number:** 87
+      - **OWASP Category:** A03:2021-Injection
+      - **Suspect Code:**
+        ```javascript
+        const query = `SELECT * FROM users WHERE id = '${req.params.id}'`;
+        db.query(query);
+        ```
+      - **Reasoning:** User-supplied input from `req.params.id` is directly concatenated into an SQL query string, creating a classic SQL Injection vulnerability.
+
+      ## Business Context
+      - **Inferred Function:** User data retrieval API endpoint
+      - **Data Sensitivity:** High. The users table likely contains Personally Identifiable Information (PII)
+      - **Potential Impact:** A successful exploit could lead to a major data breach of all user records
+    output_sample: |
+      # Detection Report
+      ## Vulnerability 1
+      - **File:** `/src/user/api.js`
+      - **Line Number:** 87
+      - **OWASP Category:** A03:2021-Injection
+      - **Suspect Code:**
+        ```javascript
+        const query = `SELECT * FROM users WHERE id = '${req.params.id}'`;
+        db.query(query);
+        ```
+      - **Reasoning:** User-supplied input from `req.params.id` is directly concatenated into an SQL query string, creating a classic SQL Injection vulnerability.
+
+      ## Business Context
+      - **Inferred Function:** User data retrieval API endpoint
+      - **Data Sensitivity:** High. The users table likely contains Personally Identifiable Information (PII)
+      - **Potential Impact:** A successful exploit could lead to a major data breach of all user records
+
+      ## Vulnerability Grade
+
+      - **CVSS Score:** 9.8 (Critical)
+      - **CVSS Vector:** CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H
+      - **Severity Level:** Critical
+      - **Risk Assessment:** High-risk vulnerability with confidentiality breach and potential data loss
+
+  - name: cve_attack_generator_agent
+    description: "Creative and adversarial security strategist who thinks like a hacker"
+    objective: "Conceptualize and describe likely attack methods for exploiting graded vulnerabilities"
+    core_responsibilities:
+      - "Generate at least three distinct, concrete attack vectors per vulnerability"
+      - "Create specific malicious payloads and exploitation techniques"
+      - "Consider cross-boundary attacks and vulnerability chaining"
+      - "Describe potential outcomes and impact for each attack scenario"
+    key_traits: ["creative", "adversarial", "technically-grounded", "impact-focused"]
+    input_sample: |   
+      # Detection Report
+      ## Vulnerability 1
+      - **File:** `/src/user/api.js`
+      - **Line Number:** 87
+      - **OWASP Category:** A03:2021-Injection
+      - **Suspect Code:**
+        ```javascript
+        const query = `SELECT * FROM users WHERE id = '${req.params.id}'`;
+        db.query(query);
+        ```
+      - **Reasoning:** User-supplied input from `req.params.id` is directly concatenated into an SQL query string, creating a classic SQL Injection vulnerability.
+
+      ## Business Context
+      - **Inferred Function:** User data retrieval API endpoint
+      - **Data Sensitivity:** High. The users table likely contains Personally Identifiable Information (PII)
+      - **Potential Impact:** A successful exploit could lead to a major data breach of all user records
+
+      ## Vulnerability Grade
+
+      - **CVSS Score:** 9.8 (Critical)
+      - **CVSS Vector:** CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H
+      - **Severity Level:** Critical
+      - **Risk Assessment:** High-risk vulnerability with confidentiality breach and potential data loss
+
+    output_sample: |
+      # Detection Report
+      ## Vulnerability 1
+      - **File:** `/src/user/api.js`
+      - **Line Number:** 87
+      - **OWASP Category:** A03:2021-Injection
+      - **Suspect Code:**
+        ```javascript
+        const query = `SELECT * FROM users WHERE id = '${req.params.id}'`;
+        db.query(query);
+        ```
+      - **Reasoning:** User-supplied input from `req.params.id` is directly concatenated into an SQL query string, creating a classic SQL Injection vulnerability.
+
+      ## Business Context
+      - **Inferred Function:** User data retrieval API endpoint
+      - **Data Sensitivity:** High. The users table likely contains Personally Identifiable Information (PII)
+      - **Potential Impact:** A successful exploit could lead to a major data breach of all user records
+
+      ## Vulnerability Grade
+
+      - **CVSS Score:** 9.8 (Critical)
+      - **CVSS Vector:** CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H
+      - **Severity Level:** Critical
+      - **Risk Assessment:** High-risk vulnerability with confidentiality breach and potential data loss
+
+      ## Attack Scenarios
+
+      Attack: Boolean-based Blind Injection
+      Payload: 1' OR 1=1 --
+      Goal: Bypass authentication or retrieve all records by creating a universally true WHERE clause.
+      Attack: Data Exfiltration (Union-based)
+      Payload: 1' UNION SELECT user, password FROM admin_users --
+      Goal: Steal credentials from a different table (admin_users) that the current user should not have access to.
+      Attack: Data Destruction
+      Payload: 1'; DROP TABLE users; --
+      Goal: Cause a Denial of Service by deleting the entire users table.
+      Attack: Database Fingerprinting
+      Payload: 1' AND 1=(SELECT @@version) --
+      Goal: Extract the database software and version number to plan more specific attacks.
+      Attack: Filesystem Access
+      Payload: 1' INTO OUTFILE '/var/www/html/shell.php' --
+      Goal: Write a malicious web shell to the server's filesystem, leading to Remote Code Execution (RCE).
+
+  - name: cve_fix_generator_agent
+    description: "Expert security software engineer focused on practical remediation"
+    objective: "Devise effective and practical code-level solutions to neutralize identified threats"
+    core_responsibilities:
+      - "Analyze root causes of vulnerabilities"
+      - "Propose robust, industry-standard fixes"
+      - "Generate before/after code comparisons"
+      - "Provide clear explanations of fix effectiveness"
+    key_traits: ["solution-oriented", "practical", "security-expert", "clear-communicator"]
+    input_sample: |
+      # Detection Report
+      ## Vulnerability 1
+      - **File:** `/src/user/api.js`
+      - **Line Number:** 87
+      - **OWASP Category:** A03:2021-Injection
+      - **Suspect Code:**
+        ```javascript
+        const query = `SELECT * FROM users WHERE id = '${req.params.id}'`;
+        db.query(query);
+        ```
+      - **Reasoning:** User-supplied input from `req.params.id` is directly concatenated into an SQL query string, creating a classic SQL Injection vulnerability.
+
+      ## Business Context
+      - **Inferred Function:** User data retrieval API endpoint
+      - **Data Sensitivity:** High. The users table likely contains Personally Identifiable Information (PII)
+      - **Potential Impact:** A successful exploit could lead to a major data breach of all user records
+
+      ## Vulnerability Grade
+
+      - **CVSS Score:** 9.8 (Critical)
+      - **CVSS Vector:** CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H
+      - **Severity Level:** Critical
+      - **Risk Assessment:** High-risk vulnerability with confidentiality breach and potential data loss
+
+      ## Attack Scenarios
+
+      Attack: Boolean-based Blind Injection
+      Payload: 1' OR 1=1 --
+      Goal: Bypass authentication or retrieve all records by creating a universally true WHERE clause.
+      Attack: Data Exfiltration (Union-based)
+      Payload: 1' UNION SELECT user, password FROM admin_users --
+      Goal: Steal credentials from a different table (admin_users) that the current user should not have access to.
+      Attack: Data Destruction
+      Payload: 1'; DROP TABLE users; --
+      Goal: Cause a Denial of Service by deleting the entire users table.
+      Attack: Database Fingerprinting
+      Payload: 1' AND 1=(SELECT @@version) --
+      Goal: Extract the database software and version number to plan more specific attacks.
+      Attack: Filesystem Access
+      Payload: 1' INTO OUTFILE '/var/www/html/shell.php' --
+      Goal: Write a malicious web shell to the server's filesystem, leading to Remote Code Execution (RCE).
+
+    output_sample: |
+      # Detection Report
+      ## Vulnerability 1
+      - **File:** `/src/user/api.js`
+      - **Line Number:** 87
+      - **OWASP Category:** A03:2021-Injection
+      - **Suspect Code:**
+        ```javascript
+        const query = `SELECT * FROM users WHERE id = '${req.params.id}'`;
+        db.query(query);
+        ```
+      - **Reasoning:** User-supplied input from `req.params.id` is directly concatenated into an SQL query string, creating a classic SQL Injection vulnerability.
+
+      ## Business Context
+      - **Inferred Function:** User data retrieval API endpoint
+      - **Data Sensitivity:** High. The users table likely contains Personally Identifiable Information (PII)
+      - **Potential Impact:** A successful exploit could lead to a major data breach of all user records
+
+      ## Vulnerability Grade
+
+      - **CVSS Score:** 9.8 (Critical)
+      - **CVSS Vector:** CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H
+      - **Severity Level:** Critical
+      - **Risk Assessment:** High-risk vulnerability with confidentiality breach and potential data loss
+
+      ## Attack Scenarios
+
+      Attack: Boolean-based Blind Injection
+      Payload: 1' OR 1=1 --
+      Goal: Bypass authentication or retrieve all records by creating a universally true WHERE clause.
+      Attack: Data Exfiltration (Union-based)
+      Payload: 1' UNION SELECT user, password FROM admin_users --
+      Goal: Steal credentials from a different table (admin_users) that the current user should not have access to.
+      Attack: Data Destruction
+      Payload: 1'; DROP TABLE users; --
+      Goal: Cause a Denial of Service by deleting the entire users table.
+      Attack: Database Fingerprinting
+      Payload: 1' AND 1=(SELECT @@version) --
+      Goal: Extract the database software and version number to plan more specific attacks.
+      Attack: Filesystem Access
+      Payload: 1' INTO OUTFILE '/var/www/html/shell.php' --
+      Goal: Write a malicious web shell to the server's filesystem, leading to Remote Code Execution (RCE).
+
+      ## Recommended Fix
+
+      - **Strategy:** The root cause is the unsafe concatenation of user input into an SQL query. The most effective solution is to use parameterized queries, which ensures user input is always treated as data, never as executable code.
+
+      - **Code Change:**
+        ```diff
+        --- a/src/user/api.js
+        +++ b/src/user/api.js
+        @@ -86,5 +86,6 @@
+         // VULNERABLE CODE
+        -const query = `SELECT * FROM users WHERE id = '${req.params.id}'`;
+        -db.query(query);
+        +// SECURE CODE
+        +const query = 'SELECT * FROM users WHERE id = ?';
+        +db.query(query, [req.params.id]);
+        ```
+
+      - **Verification:** The proposed change prevents all listed attack scenarios because the database driver will handle the safe substitution of the placeholder `?`, neutralizing any malicious payloads.
+
+      - **Additional Recommendations:**
+        - Implement input validation and sanitization
+        - Use stored procedures where applicable
+        - Apply principle of least privilege for database connections
+        - Enable database query logging for monitoring
+
+  - name: reporting_integration_agent
+    description: "Organized and efficient communications hub for security workflow"
+    objective: "Package final analysis into actionable reports and integrate with external developer tools"
+    core_responsibilities:
+      - "Compile comprehensive vulnerability reports"
+      - "Structure information for maximum clarity"
+      - "Generate integration-ready JSON for ticketing systems"
+      - "Create executive summaries and technical details"
+    key_traits: ["organized", "automated", "communicative", "reliable"]
+    input_sample:  |
+      # Detection Report
+      ## Vulnerability 1
+      - **File:** `/src/user/api.js`
+      - **Line Number:** 87
+      - **OWASP Category:** A03:2021-Injection
+      - **Suspect Code:**
+        ```javascript
+        const query = `SELECT * FROM users WHERE id = '${req.params.id}'`;
+        db.query(query);
+        ```
+      - **Reasoning:** User-supplied input from `req.params.id` is directly concatenated into an SQL query string, creating a classic SQL Injection vulnerability.
+
+      ## Business Context
+      - **Inferred Function:** User data retrieval API endpoint
+      - **Data Sensitivity:** High. The users table likely contains Personally Identifiable Information (PII)
+      - **Potential Impact:** A successful exploit could lead to a major data breach of all user records
+
+      ## Vulnerability Grade
+
+      - **CVSS Score:** 9.8 (Critical)
+      - **CVSS Vector:** CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H
+      - **Severity Level:** Critical
+      - **Risk Assessment:** High-risk vulnerability with confidentiality breach and potential data loss
+
+      ## Attack Scenarios
+
+      Attack: Boolean-based Blind Injection
+      Payload: 1' OR 1=1 --
+      Goal: Bypass authentication or retrieve all records by creating a universally true WHERE clause.
+      Attack: Data Exfiltration (Union-based)
+      Payload: 1' UNION SELECT user, password FROM admin_users --
+      Goal: Steal credentials from a different table (admin_users) that the current user should not have access to.
+      Attack: Data Destruction
+      Payload: 1'; DROP TABLE users; --
+      Goal: Cause a Denial of Service by deleting the entire users table.
+      Attack: Database Fingerprinting
+      Payload: 1' AND 1=(SELECT @@version) --
+      Goal: Extract the database software and version number to plan more specific attacks.
+      Attack: Filesystem Access
+      Payload: 1' INTO OUTFILE '/var/www/html/shell.php' --
+      Goal: Write a malicious web shell to the server's filesystem, leading to Remote Code Execution (RCE).
+
+      ## Recommended Fix
+
+      - **Strategy:** The root cause is the unsafe concatenation of user input into an SQL query. The most effective solution is to use parameterized queries, which ensures user input is always treated as data, never as executable code.
+
+      - **Code Change:**
+        ```diff
+        --- a/src/user/api.js
+        +++ b/src/user/api.js
+        @@ -86,5 +86,6 @@
+         // VULNERABLE CODE
+        -const query = `SELECT * FROM users WHERE id = '${req.params.id}'`;
+        -db.query(query);
+        +// SECURE CODE
+        +const query = 'SELECT * FROM users WHERE id = ?';
+        +db.query(query, [req.params.id]);
+        ```
+
+      - **Verification:** The proposed change prevents all listed attack scenarios because the database driver will handle the safe substitution of the placeholder `?`, neutralizing any malicious payloads.
+
+      - **Additional Recommendations:**
+        - Implement input validation and sanitization
+        - Use stored procedures where applicable
+        - Apply principle of least privilege for database connections
+        - Enable database query logging for monitoring
+      
+    output_sample: |
+      # Final Report (final_report.md)
+      
+      # Critical Security Vulnerability Report
+      1 Critical vulnerability (CVSS 9.8) - SQL Injection
+      2 High-severity vulnerabilities (CVSS 8.1, 7.5) - Path Traversal & Hardcoded Secrets
+
+      ## Vulnerability Summary Matrix
+
+      | Vulnerability     | OWASP Category             | CVSS Score | Severity | Files Affected                              | Impact                        |
+      | ----------------- | -------------------------- | ---------- | -------- | ------------------------------------------- | ----------------------------- |
+      | SQL Injection     | A01:2021 - Injection       | 9.8        | Critical | `/src/user/api.js`                     | Complete container compromise |
+      | Path Traversal    | A01:2021 - Injection       | 8.1        | High     | Multiple archiver/storage files             | Arbitrary file access         |
+     
+      ## Vulnerability 1
+      - **File:** `/src/user/api.js`
+      - **Line Number:** 87
+      - **OWASP Category:** A03:2021-Injection
+      - **Suspect Code:**
+        ```javascript
+        const query = `SELECT * FROM users WHERE id = '${req.params.id}'`;
+        db.query(query);
+        ```
+      - **Reasoning:** User-supplied input from `req.params.id` is directly concatenated into an SQL query string, creating a classic SQL Injection vulnerability.
+
+      ## Business Context
+      - **Inferred Function:** User data retrieval API endpoint
+      - **Data Sensitivity:** High. The users table likely contains Personally Identifiable Information (PII)
+      - **Potential Impact:** A successful exploit could lead to a major data breach of all user records
+
+      ## Vulnerability Grade
+
+      - **CVSS Score:** 9.8 (Critical)
+      - **CVSS Vector:** CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H
+      - **Severity Level:** Critical
+      - **Risk Assessment:** High-risk vulnerability with confidentiality breach and potential data loss
+
+      ## Attack Scenarios
+
+      Attack: Boolean-based Blind Injection
+      Payload: 1' OR 1=1 --
+      Goal: Bypass authentication or retrieve all records by creating a universally true WHERE clause.
+      Attack: Data Exfiltration (Union-based)
+      Payload: 1' UNION SELECT user, password FROM admin_users --
+      Goal: Steal credentials from a different table (admin_users) that the current user should not have access to.
+      Attack: Data Destruction
+      Payload: 1'; DROP TABLE users; --
+      Goal: Cause a Denial of Service by deleting the entire users table.
+      Attack: Database Fingerprinting
+      Payload: 1' AND 1=(SELECT @@version) --
+      Goal: Extract the database software and version number to plan more specific attacks.
+      Attack: Filesystem Access
+      Payload: 1' INTO OUTFILE '/var/www/html/shell.php' --
+      Goal: Write a malicious web shell to the server's filesystem, leading to Remote Code Execution (RCE).
+
+      ## Recommended Fix
+
+      - **Strategy:** The root cause is the unsafe concatenation of user input into an SQL query. The most effective solution is to use parameterized queries, which ensures user input is always treated as data, never as executable code.
+
+      - **Code Change:**
+        ```diff
+        --- a/src/user/api.js
+        +++ b/src/user/api.js
+        @@ -86,5 +86,6 @@
+         // VULNERABLE CODE
+        -const query = `SELECT * FROM users WHERE id = '${req.params.id}'`;
+        -db.query(query);
+        +// SECURE CODE
+        +const query = 'SELECT * FROM users WHERE id = ?';
+        +db.query(query, [req.params.id]);
+        ```
+
+      - **Verification:** The proposed change prevents all listed attack scenarios because the database driver will handle the safe substitution of the placeholder `?`, neutralizing any malicious payloads.
+
+      - **Additional Recommendations:**
+        - Implement input validation and sanitization
+        - Use stored procedures where applicable
+        - Apply principle of least privilege for database connections
+        - Enable database query logging for monitoring
+      ---
+      
+      # Integration Output (ticket.json)
+      
+      {
+        "title": "Critical SQL Injection Vulnerability in user/api.js",
+        "assignees": ["@security-team", "@dev-team"],
+        "labels": ["security", "critical-bug", "owasp-a03", "sql-injection"],
+        "priority": "P0",
+        "severity": "Critical",
+        "body": "# Critical Security Vulnerability Report\n\n## Vulnerability Grade\n\n- **CVSS Score:** 9.8 (Critical)\n- **CVSS Vector:** CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H\n\n## Detection Details\n\n- **File:** /src/user/api.js\n- **Line Number:** 87\n- **OWASP Category:** A03:2021-Injection\n- **Suspect Code:**\n```javascript\nconst query = `SELECT * FROM users WHERE id = '${req.params.id}'`;\ndb.query(query);\n```\n\n## Business Impact\n- **Risk Level:** Critical\n- **Potential Impact:** Complete database compromise, data breach, ransomware risk\n- **Affected Systems:** User management API, customer data\n\n## Recommended Fix\n```javascript\n// Replace with parameterized query\nconst query = 'SELECT * FROM users WHERE id = ?';\ndb.query(query, [req.params.id]);\n```\n\n**Action Required:** Immediate code review and deployment of fix within 24 hours.",
+        "metadata": {
+          "vulnerability_id": "CVE-2024-001",
+          "discovery_date": "2024-01-15",
+          "cvss_score": 9.8,
+          "owasp_category": "A03:2021-Injection",
+          "affected_files": ["/src/user/api.js"],
+          "fix_complexity": "Low"
+        }
+      }

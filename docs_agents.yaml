@@ -1,0 +1,298 @@
+# ===================================================================
+#      Agentic AI System for Automated Documentation Generation
+# ===================================================================
+# This YAML file defines a multi-agent workflow for analyzing a
+# software repository, assessing its documentation, and generating
+# a complete report with actionable recommendations.
+# ===================================================================
+
+# --- Global Configuration ---
+# Defines settings applicable to the entire agentic system.
+global_config:
+  context_reference_file: "config/docs_global_context.md"
+
+# --- Directed Acyclic Graph (DAG) Flow ---
+# Defines the sequential execution of agents and the flow of data.
+dag_flow:
+  - agent: code_analyzer_agent
+    input: "data/inputs/codebase_files.md"
+    output: "data/outputs/code_analysis_report.md"
+
+  - agent: build_analyzer_agent
+    input: "data/outputs/code_analysis_report.md"
+    output: "data/outputs/build_analysis_report.md"
+
+  - agent: documentation_assessment_agent
+    input: "data/outputs/build_analysis_report.md"
+    output: "data/outputs/assessment_report.md"
+
+  - agent: reporting_integration_agent
+    input: "data/outputs/assessment_report.md"
+    output: "data/final_report/documentation_report.md"
+
+# --- Agent Definitions ---
+# A list of all agents (nodes) in the system.
+agents:
+  - name: code_analyzer_agent
+    description: "A meticulous software architect that deconstructs code to understand its structure."
+    objective: "Analyze the provided codebase to identify its core modules, public-facing APIs, and architectural layers."
+    core_responsibilities:
+      - "Parse directory and file structures to identify distinct software modules."
+      - "Scan source code to locate API endpoints, public functions, and class interfaces."
+      - "Infer the architectural pattern (e.g., MVC, Layered, Microservices) from the code organization."
+      - "Produce a structured report detailing the code's architecture."
+    key_traits: ["analytical", "structured", "architectural", "thorough"]
+    input_sample: |
+      # Repository Snapshot
+
+      ## File: `/src/api/routes/users.js`
+      ```javascript
+      const express = require('express');
+      const router = express.Router();
+      const userController = require('../controllers/userController');
+
+      // GET all users
+      router.get('/', userController.getAllUsers);
+
+      // POST a new user
+      router.post('/', userController.createUser);
+      ```
+
+      ## File: `/src/services/userService.js`
+      ```javascript
+      const db = require('../data/db');
+
+      class UserService {
+        async fetchAll() {
+          return await db.query('SELECT * FROM users');
+        }
+      }
+      ```
+    output_sample: |
+      # Code Analysis Report
+
+      ## 1. Identified Modules
+      - **Users**: Manages user data and authentication. Contains controllers, services, and routes.
+      - **Data**: The data access layer, responsible for database interactions.
+
+      ## 2. APIs and Interfaces
+      - **User API Endpoints**:
+        - `GET /api/users`: Fetches all users.
+        - `POST /api/users`: Creates a new user.
+      - **Core Interfaces**:
+        - `UserService`: A class providing methods to interact with user data.
+
+      ## 3. Code Layers
+      - **Presentation Layer**: `/src/api/routes/users.js` (Handles HTTP requests and routing).
+      - **Business Logic Layer**: `/src/services/userService.js` (Contains core application logic).
+      - **Data Access Layer**: `/src/data/db.js` (Handles direct database communication).
+
+  - name: build_analyzer_agent
+    description: "A DevOps specialist who interprets build and deployment configurations."
+    objective: "Analyze Makefiles and Dockerfiles to explain the project's build processes and primary use cases."
+    core_responsibilities:
+      - "Parse the Makefile to identify and describe available commands."
+      - "Deconstruct the Dockerfile to explain the container environment and setup."
+      - "Synthesize code and build analysis to define the software's intended use cases."
+    key_traits: ["process-oriented", "technical", "DevOps-focused", "clear"]
+    input_sample: |
+      # Code Analysis Report
+
+      ## 1. Identified Modules
+      - **Users**: Manages user data and authentication.
+
+      ## 2. APIs and Interfaces
+      - **User API Endpoints**: `GET /api/users`, `POST /api/users`.
+
+      ## 3. Code Layers
+      - **Presentation Layer**: `/src/api/routes/users.js`
+      - **Business Logic Layer**: `/src/services/userService.js`
+      - **Data Access Layer**: `/src/data/db.js`
+
+      ## Other Files
+      ### Makefile
+      ```makefile
+      .PHONY: install start test
+
+      install:
+          npm install
+
+      start:
+          node src/server.js
+
+      test:
+          jest
+      ```
+      ### Dockerfile
+      ```dockerfile
+      FROM node:18-alpine
+      WORKDIR /app
+      COPY package*.json ./
+      RUN npm install
+      COPY . .
+      EXPOSE 3000
+      CMD ["npm", "start"]
+      ```
+    output_sample: |
+      # Build and Use Case Analysis Report
+
+      ## 1. Code Architecture Summary
+      The application is a Node.js web service with a layered architecture for managing users.
+
+      ## 2. Use Cases
+      - **Primary Use Case**: To serve as a backend API for a user management system. It allows clients to retrieve a list of users and create new users.
+      - **Operational Use Case**: To be run as a containerized web server for easy deployment and scaling.
+
+      ## 3. Makefile Commands
+      - `make install`: Installs all Node.js project dependencies.
+      - `make start`: Runs the application server directly.
+      - `make test`: Executes the automated test suite using Jest.
+
+      ## 4. Dockerfile Explanation
+      - **Base Image**: Starts from a lightweight Node.js 18 image (`node:18-alpine`).
+      - **Setup**: Sets up the `/app` directory, copies package manifests, and installs dependencies inside the container.
+      - **Execution**: Copies the source code, exposes port `3000`, and defines the default command to start the application via `npm start`.
+
+  - name: documentation_assessment_agent
+    description: "A technical writer and editor who audits documentation for clarity and completeness."
+    objective: "Assess existing documentation (README) against the analyzed code and build processes to identify gaps."
+    core_responsibilities:
+      - "Read the existing README file."
+      - "Compare the README's content against the full analysis of the code, APIs, and build steps."
+      - "Identify what information is missing, unclear, or incorrect."
+      - "Generate a report highlighting specific areas of insufficiency."
+    key_traits: ["critical", "detail-oriented", "user-focused", "constructive"]
+    input_sample: |
+      # Build and Use Case Analysis Report
+      ## 2. Use Cases
+      - **Primary Use Case**: To serve as a backend API for a user management system.
+      ## 3. Makefile Commands
+      - `make install`: Installs all Node.js project dependencies.
+      - `make start`: Runs the application server directly.
+      - `make test`: Executes the automated test suite.
+      ## 4. Dockerfile Explanation
+      - **Execution**: Exposes port `3000` and defines the default command to start the application.
+
+      # Existing Documentation
+      ## README.md
+      ```md
+      # User Service
+      A service for users.
+
+      ## Setup
+      Run `npm install` and then `npm start`.
+      ```
+    output_sample: |
+      # Documentation Assessment Report
+
+      ## Overall Assessment: Insufficient
+
+      The current README.md file is severely lacking in detail and does not provide an adequate guide for a new developer, user, or operator.
+
+      ## Identified Gaps and Deficiencies
+      1.  **Missing API Documentation**: The README completely omits any mention of the available API endpoints (`GET /api/users`, `POST /api/users`), their purpose, or expected request/response formats.
+      2.  **No Architectural Overview**: There is no explanation of the project's structure (routes, services, data layers), making it difficult for new contributors to understand the codebase.
+      3.  **Incomplete Setup Instructions**: The README mentions `npm install` and `npm start` but fails to mention the available `make` commands (`make install`, `make start`, `make test`), which simplify the process.
+      4.  **No Docker Information**: The existence of a `Dockerfile` and instructions on how to build and run the application as a container are completely missing. This is a critical gap for deployment.
+      5.  **No Use Case Explanation**: The project's purpose is vaguely described as "A service for users," which is not descriptive enough.
+
+  - name: reporting_integration_agent
+    description: "An organized communications lead who compiles final reports and creates actionable tickets."
+    objective: "Consolidate all analysis into a final documentation report, suggest concrete README improvements, and generate JSON for ticketing systems."
+    core_responsibilities:
+      - "Synthesize all prior analysis into a single, comprehensive markdown report."
+      - "Propose a new, well-structured README.md with all missing information."
+      - "Generate a JSON object with tickets for each documentation improvement task."
+    key_traits: ["organized", "action-oriented", "communicative", "conclusive"]
+    input_sample: |
+      # Documentation Assessment Report
+
+      ## Overall Assessment: Insufficient
+
+      ## Identified Gaps and Deficiencies
+      1.  **Missing API Documentation**: The README completely omits any mention of the available API endpoints.
+      2.  **No Architectural Overview**: There is no explanation of the project's structure.
+      3.  **Incomplete Setup Instructions**: Fails to mention the available `make` commands.
+      4.  **No Docker Information**: Instructions on how to build and run the application as a container are missing.
+      5.  **No Use Case Explanation**: The project's purpose is vaguely described.
+    output_sample: |
+      # Final Documentation Report (documentation_report.md)
+
+      # Comprehensive Documentation Analysis and Improvement Plan
+
+      ## 1. Executive Summary
+      Our analysis reveals that the existing documentation is insufficient for developers and operators. Key missing elements include API endpoint definitions, architectural overview, build/deployment instructions using Make and Docker, and a clear description of use cases. This report provides a complete overview and a proposed new README to resolve these gaps.
+
+      ## 2. Full System Analysis
+      - **Architecture**: The application uses a 3-layer architecture (Presentation, Business Logic, Data Access) to provide a User Management REST API.
+      - **Build Process**: The `Makefile` provides convenience targets (`install`, `start`, `test`) for common operations.
+      - **Deployment**: The `Dockerfile` configures the application to run as a containerized service on port 3000.
+
+      ## 3. Suggested README.md Improvements
+      Below is a template for a new, more comprehensive README file.
+
+      ````md
+      # User Service API
+
+      ## Overview
+      This project is a Node.js backend service that provides a RESTful API for user management. It is built with a layered architecture and is designed to be run as a Docker container.
+
+      ## Architecture
+      The codebase is organized into three main layers:
+      - **/src/api/routes**: The Presentation Layer, defines API endpoints.
+      - **/src/services**: The Business Logic Layer, contains core application logic.
+      - **/src/data**: The Data Access Layer, handles database interactions.
+
+      ## Getting Started
+
+      ### Prerequisites
+      - Docker
+      - Node.js v18+
+      - Make
+
+      ### Running with Docker (Recommended)
+      1. Build the Docker image: `docker build -t user-service .`
+      2. Run the container: `docker run -p 3000:3000 user-service`
+
+      ### Local Development with Make
+      1. Install dependencies: `make install`
+      2. Run the server: `make start`
+      3. Run tests: `make test`
+
+      ## API Documentation
+      The server runs on `http://localhost:3000`.
+
+      ### Get All Users
+      - **Endpoint**: `GET /api/users`
+      - **Description**: Retrieves a list of all users.
+      - **Response**: `200 OK` with a JSON array of user objects.
+
+      ### Create User
+      - **Endpoint**: `POST /api/users`
+      - **Description**: Creates a new user.
+      - **Body**: `{ "name": "John Doe", "email": "john.doe@example.com" }`
+      - **Response**: `201 Created` with the new user object.
+      ````
+
+      ---
+
+      # Integration Output (tickets.json)
+
+      {
+        "tickets": [
+          {
+            "title": "DOCS: Create Comprehensive README File",
+            "assignees": ["@tech-writer-team"],
+            "labels": ["documentation", "improvement", "good-first-issue"],
+            "priority": "Medium",
+            "body": "The current README is insufficient. A new README needs to be created that includes:\n\n1.  **Project Overview**: A clear explanation of the service's purpose.\n2.  **Architecture Section**: A brief description of the code layers.\n3.  **Build/Run Instructions**: Must include both Docker and Makefile instructions.\n4.  **API Documentation**: A section detailing all available endpoints, methods, and example bodies/responses.\n\nRefer to the generated `documentation_report.md` for a complete template and details."
+          },
+          {
+            "title": "DOCS: Add Inline Code Comments for API Routes",
+            "assignees": ["@dev-team"],
+            "labels": ["documentation", "code-quality"],
+            "priority": "Low",
+            "body": "The API routes in `/src/api/routes/` should have inline JSDoc-style comments explaining what each endpoint does, its parameters, and what it returns. This will help with long-term maintainability."
+          }
+        ]
+      }

@@ -1,0 +1,11 @@
+name: Agentic Code Security Scanning
+description: Short description of what the AMP does.
+author: David Gabriel, Vidushi Somani
+specification_version: 1.0
+prototype_version: 1.0
+date: "2025-08-05"
+
+runtimes:
+  - editor: JupyterLab
+    kernel: Python 3.11
+    edition: Standard
